@@ -23,12 +23,13 @@ const GENRES: Array<{ id: Genre; label: string }> = [
 
 export default function MusicasPage() {
   const profile = useSession((s) => s.profile);
+  const hasHydrated = useSession((s) => s.hasHydrated);
   const router = useRouter();
   const [filterGenres, setFilterGenres] = useState<Set<Genre>>(new Set());
 
   useEffect(() => {
-    if (!profile) router.replace('/onboarding');
-  }, [profile, router]);
+    if (hasHydrated && !profile) router.replace('/onboarding');
+  }, [profile, hasHydrated, router]);
 
   const results = useMemo<MatchResult[]>(() => {
     if (!profile) return [];

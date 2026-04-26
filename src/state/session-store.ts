@@ -21,20 +21,28 @@ export interface VoiceProfile {
 
 interface SessionState {
   profile: VoiceProfile | null;
+  hasHydrated: boolean;
   setProfile: (profile: VoiceProfile) => void;
   clear: () => void;
+  setHasHydrated: (v: boolean) => void;
 }
 
 export const useSession = create<SessionState>()(
   persist(
     (set) => ({
       profile: null,
+      hasHydrated: false,
       setProfile: (profile) => set({ profile }),
       clear: () => set({ profile: null }),
+      setHasHydrated: (v) => set({ hasHydrated: v }),
     }),
     {
       name: 'vocax-session-v1',
-      storage: createJSONStorage(() => (typeof window !== 'undefined' ? localStorage : undefined as unknown as Storage)),
+      storage: createJSONStorage(() => (typeof window !== 'undefined' ? localStorage : (undefined as unknown as Storage))),
+      partialize: (state) => ({ profile: state.profile }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );

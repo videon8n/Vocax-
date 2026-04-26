@@ -14,13 +14,14 @@ import { Music, RotateCcw, ArrowRight } from 'lucide-react';
 
 export default function ResultadoPage() {
   const profile = useSession((s) => s.profile);
+  const hasHydrated = useSession((s) => s.hasHydrated);
   const clear = useSession((s) => s.clear);
   const router = useRouter();
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!profile) router.replace('/onboarding');
-  }, [profile, router]);
+    if (hasHydrated && !profile) router.replace('/onboarding');
+  }, [profile, hasHydrated, router]);
 
   const shareText = useMemo(() => {
     if (!profile) return '';

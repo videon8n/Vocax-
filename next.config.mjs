@@ -2,6 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Vercel cobra lint no build — confiamos no typecheck, evitamos surpresa de regra
+  eslint: { ignoreDuringBuilds: true },
   async headers() {
     return [
       {

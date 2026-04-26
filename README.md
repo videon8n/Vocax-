@@ -2,59 +2,119 @@
 
 > Análise vocal com IA. Descubra seu timbre, sua extensão e as músicas que caem na sua voz.
 
-Vocax é um Progressive Web App brasileiro que transforma o microfone do seu navegador em um **professor de canto + curador musical pessoal**. Em 90 segundos, ele entende sua voz e te diz exatamente quais músicas combinam com você.
+---
+
+## Rodar no seu PC em 30 segundos
+
+### macOS / Linux
+
+Cole no Terminal:
+
+```bash
+git clone https://github.com/videon8n/vocax-.git vocax \
+  && cd vocax \
+  && git checkout claude/voice-analysis-music-app-ys05h \
+  && bash setup.sh
+```
+
+### Windows (PowerShell ou CMD)
+
+```bat
+git clone https://github.com/videon8n/vocax-.git vocax
+cd vocax
+git checkout claude/voice-analysis-music-app-ys05h
+setup.cmd
+```
+
+O script cuida de tudo:
+
+1. ✓ Verifica Node 20+
+2. ✓ Ativa pnpm via corepack se faltar
+3. ✓ Instala 360+ pacotes (~30s)
+4. ✓ Roda typecheck
+5. ✓ Sobe o dev server em **http://localhost:3000**
+
+Abra no Chrome ou Safari, autorize o microfone e siga o fluxo:
+
+```
+/  →  /onboarding  →  /onboarding/calibrar  →  /onboarding/exercicio  →  /resultado  →  /musicas
+```
+
+### Pré-requisitos
+
+| Ferramenta | Versão | Como instalar |
+|---|---|---|
+| Node.js | 20+ | https://nodejs.org/ (LTS) |
+| Git | qualquer | https://git-scm.com/ |
+| pnpm | 10+ | instalado automaticamente pelo `setup.sh` |
+
+---
 
 ## O que o Vocax faz
 
-- **Detecta seu pitch em tempo real** (algoritmo YIN, ~25ms de latência)
-- **Mapeia sua extensão vocal** (nota mais grave e mais aguda confiáveis)
-- **Identifica seu fach** (soprano, mezzo, contralto, tenor, barítono, baixo)
-- **Analisa seu timbre** com adjetivos humanos ("quente, aveludada, brilhante no agudo")
-- **Recomenda músicas reais** do catálogo brasileiro com deep-link para Spotify
-- **Gera um Cartão de Voz** compartilhável
+- **Detecta pitch em tempo real** (algoritmo YIN, ~25ms latência)
+- **Mapeia extensão vocal** (nota mais grave + mais aguda confiáveis)
+- **Identifica fach** (soprano, mezzo, contralto, tenor, barítono, baixo)
+- **Analisa timbre** com adjetivos humanos (quente, brilhante, soprosa…)
+- **Recomenda 10 músicas** do catálogo PT-BR com deep-link Spotify
+- **Cartão de Voz** compartilhável
 
 ## Diferencial
 
-Apps como Smule, Vanido e Yousician treinam afinação. **Nenhum deles te diz qual música cantar.** O Vocax é o primeiro a fechar esse ciclo: análise vocal completa → catálogo real de músicas que cabem na sua voz.
+Smule, Vanido, SingSharp, Yousician treinam afinação. **Nenhum deles te diz qual música cantar.** O Vocax é o primeiro a fechar esse ciclo.
 
 ## Stack
 
-- **Next.js 15** (App Router) + **React 19** + **TypeScript**
-- **Web Audio API + AudioWorklet** para captura de baixa latência
-- **Algoritmo YIN** em JavaScript puro para detecção de f0 (sem dependência de modelo ML pesado no MVP)
-- **Tailwind v3** + design tokens próprios + **Framer Motion**
-- **PWA** instalável, funciona offline para histórico
-- **Zustand** para estado da sessão de gravação
+- **Next.js 15.5** + **React 19** + **TypeScript** estrito
+- **Web Audio API + AudioWorklet** (thread dedicada)
+- **YIN** em JavaScript puro para detecção de f0
+- **Tailwind v3** + design tokens (gradiente âmbar→magenta, Fraunces + Inter)
+- **Zustand** para sessão local (persistente em localStorage)
+- **PWA** instalável
 
 ## Privacidade
 
-Voz é dado biométrico. Por padrão, **nenhum áudio bruto sai do seu dispositivo**. Toda a análise acontece no navegador. Apenas métricas agregadas (range, fach, embedding de timbre) são enviadas ao servidor — e só com seu consentimento explícito.
-
-## Rodando localmente
-
-```bash
-pnpm install
-pnpm dev
-# abra http://localhost:3000
-```
+Voz é dado biométrico (LGPD). Por padrão, **nenhum áudio bruto sai do seu dispositivo**. Toda a análise acontece no navegador. Apenas resultado agregado (range, fach, timbre) é salvo localmente. Endpoint /perfil "Esquecer-me" apaga tudo.
 
 ## Estrutura
 
 ```
 src/
 ├── audio/          # captura, AudioWorklet, processamento de sinal
-├── ml/             # análise de pitch, range, timbre, fach
-├── features/       # slices verticais (pitch, range, timbre, fach, songs)
-├── ui/             # design system, componentes
-├── state/          # stores Zustand
+├── features/       # vertical slices: pitch, range, timbre, fach, songs
+├── ui/             # design system, componentes (Button, WaveVisual, PitchLine, RangeBar, VoiceCard)
+├── state/          # store Zustand
 ├── data/           # catálogo PT-BR curado
 └── app/            # rotas Next.js (App Router)
+public/
+└── worklets/       # AudioWorklet processor (YIN)
+```
+
+## Comandos
+
+```bash
+pnpm dev         # dev server com hot reload
+pnpm build       # build de produção
+pnpm start       # serve build de produção
+pnpm typecheck   # validação TypeScript
+pnpm lint        # ESLint
+```
+
+## Deploy
+
+Push pra `claude/voice-analysis-music-app-ys05h` dispara deploy automático na Vercel (se conectado).
+
+```bash
+# Deploy direto via Vercel CLI (alternativa):
+npm i -g vercel
+vercel login
+vercel --prod
 ```
 
 ## Roadmap
 
 - **MVP atual:** análise on-device, recomendação por extensão e chave, Cartão de Voz
-- **v1.0:** plano diário personalizado, vibrato, evolução, modo Senior, login
+- **v1.0:** plano diário, vibrato detalhado, modo Senior, login, sincronização
 - **v2.0:** duetos, marketplace de professores, app nativo iOS/Android
 
 ## Licença

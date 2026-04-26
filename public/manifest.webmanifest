@@ -1,0 +1,38 @@
+{
+  "name": "Vocax — Descubra a sua voz",
+  "short_name": "Vocax",
+  "description": "Análise vocal com IA. Descubra seu timbre, sua extensão e as músicas que caem na sua voz.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0E0E12",
+  "theme_color": "#0E0E12",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "categories": ["music", "education", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "screenshots": []
+}

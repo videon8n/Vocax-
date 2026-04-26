@@ -5,14 +5,6 @@ const nextConfig = {
   async headers() {
     return [
       {
-        // AudioWorklet precisa de COOP/COEP para SharedArrayBuffer / WebAssembly threads.
-        source: '/:path*',
-        headers: [
-          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
-          { key: 'Cross-Origin-Embedder-Policy', value: 'require-corp' },
-        ],
-      },
-      {
         source: '/worklets/:path*',
         headers: [
           { key: 'Content-Type', value: 'application/javascript; charset=utf-8' },

@@ -16,6 +16,28 @@ describe('detectAudioCapabilities (jsdom env)', () => {
     const caps = detectAudioCapabilities();
     expect(caps.isFullySupported).toBe(false);
   });
+
+  it('does not throw even when AudioContext.prototype.audioWorklet is a getter', () => {
+    // Reproduz o caso real de Chrome onde audioWorklet é getter no prototype
+    // que joga TypeError: Illegal invocation se acessado fora de instance.
+    class FakeAudioContext {}
+    Object.defineProperty(FakeAudioContext.prototype, 'audioWorklet', {
+      get() {
+        throw new TypeError('Illegal invocation');
+      },
+      configurable: true,
+    });
+    const original = (window as unknown as { AudioContext?: unknown }).AudioContext;
+    (window as unknown as { AudioContext: unknown }).AudioContext = FakeAudioContext;
+
+    expect(() => detectAudioCapabilities()).not.toThrow();
+    const caps = detectAudioCapabilities();
+    expect(caps.hasAudioContext).toBe(true);
+    // 'in' não chama o getter, então deve ver a propriedade como existente
+    expect(caps.hasAudioWorklet).toBe(true);
+
+    (window as unknown as { AudioContext?: unknown }).AudioContext = original;
+  });
 });
 
 describe('getBlockingIssue', () => {

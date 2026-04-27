@@ -9,6 +9,10 @@
  *
  * Sem AudioWorklet o pipeline de pitch não roda; o usuário precisa
  * de uma mensagem clara em vez de erro genérico.
+ *
+ * IMPORTANTE: usamos `in` ao invés de acessar `AudioContext.prototype.audioWorklet`
+ * direto — em Chromium o `audioWorklet` é um getter que exige `this` válido,
+ * lê-lo do prototype joga `TypeError: Illegal invocation`.
  */
 
 export interface AudioCapabilities {
@@ -21,39 +25,59 @@ export interface AudioCapabilities {
   isFullySupported: boolean;
 }
 
+const EMPTY: AudioCapabilities = {
+  hasMediaDevices: false,
+  hasGetUserMedia: false,
+  hasAudioContext: false,
+  hasAudioWorklet: false,
+  isSecureContext: false,
+  isFullySupported: false,
+};
+
 export function detectAudioCapabilities(): AudioCapabilities {
-  if (typeof window === 'undefined') {
+  if (typeof window === 'undefined') return EMPTY;
+  try {
+    const hasMediaDevices = typeof navigator !== 'undefined' && !!navigator.mediaDevices;
+    const hasGetUserMedia =
+      hasMediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function';
+
+    const AudioCtx: typeof AudioContext | undefined =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    const hasAudioContext = !!AudioCtx;
+
+    // `in` não chama o getter — só verifica existência. Funciona em Chrome,
+    // Firefox e Safari sem disparar TypeError.
+    let hasAudioWorklet = false;
+    if (hasAudioContext && AudioCtx) {
+      try {
+        hasAudioWorklet =
+          'audioWorklet' in AudioCtx.prototype ||
+          typeof (window as unknown as { AudioWorkletNode?: unknown }).AudioWorkletNode ===
+            'function';
+      } catch {
+        hasAudioWorklet = false;
+      }
+    }
+
+    const isSecureContext = window.isSecureContext === true;
+
+    const isFullySupported =
+      hasMediaDevices && hasGetUserMedia && hasAudioContext && hasAudioWorklet && isSecureContext;
+
     return {
-      hasMediaDevices: false,
-      hasGetUserMedia: false,
-      hasAudioContext: false,
-      hasAudioWorklet: false,
-      isSecureContext: false,
-      isFullySupported: false,
+      hasMediaDevices,
+      hasGetUserMedia,
+      hasAudioContext,
+      hasAudioWorklet,
+      isSecureContext,
+      isFullySupported,
     };
+  } catch {
+    // Qualquer erro inesperado de feature detection não pode quebrar a tela.
+    // Retornamos "não suportado" — UnsupportedBrowser orienta o usuário.
+    return EMPTY;
   }
-  const hasMediaDevices = typeof navigator !== 'undefined' && !!navigator.mediaDevices;
-  const hasGetUserMedia = hasMediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function';
-  const AudioCtx =
-    window.AudioContext ||
-    (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  const hasAudioContext = !!AudioCtx;
-  const hasAudioWorklet =
-    hasAudioContext &&
-    typeof (AudioCtx.prototype as AudioContext & { audioWorklet?: AudioWorklet }).audioWorklet !== 'undefined';
-  const isSecureContext = window.isSecureContext === true;
-
-  const isFullySupported =
-    hasMediaDevices && hasGetUserMedia && hasAudioContext && hasAudioWorklet && isSecureContext;
-
-  return {
-    hasMediaDevices,
-    hasGetUserMedia,
-    hasAudioContext,
-    hasAudioWorklet,
-    isSecureContext,
-    isFullySupported,
-  };
 }
 
 export interface CompatibilityIssue {
@@ -96,7 +120,8 @@ export function getBlockingIssue(caps: AudioCapabilities): CompatibilityIssue | 
     return {
       code: 'no-audio-worklet',
       title: 'Versão antiga do navegador',
-      message: 'O Vocax precisa de uma funcionalidade que só existe a partir do Safari 14.5 (iOS 14.5), Chrome 66 ou Firefox 76.',
+      message:
+        'O Vocax precisa de uma funcionalidade que só existe a partir do Safari 14.5 (iOS 14.5), Chrome 66 ou Firefox 76.',
       hint: 'Atualize seu navegador ou abra o Vocax em um aparelho mais recente.',
     };
   }

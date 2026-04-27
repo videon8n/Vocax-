@@ -7,12 +7,15 @@ import { Header } from '@/ui/header';
 import { Button } from '@/ui/button';
 import { Dialog } from '@/ui/dialog';
 import { useSession } from '@/state/session-store';
+import { usePreferences } from '@/state/preferences-store';
 import { midiToNoteName } from '@/lib/music';
-import { Music, RotateCcw, ArrowRight, Trash2 } from 'lucide-react';
+import { Music, RotateCcw, ArrowRight, Trash2, Volume2, VolumeX } from 'lucide-react';
 
 export default function PerfilPage() {
   const profile = useSession((s) => s.profile);
   const clear = useSession((s) => s.clear);
+  const soundEnabled = usePreferences((s) => s.soundEnabled);
+  const setSoundEnabled = usePreferences((s) => s.setSoundEnabled);
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -82,11 +85,44 @@ export default function PerfilPage() {
           </Link>
         </div>
 
-        <div className="mt-12 border-t border-white/[0.06] pt-8 flex flex-col sm:flex-row gap-3">
-          <Button
-            variant="ghost"
-            onClick={() => router.push('/onboarding')}
+        <div className="mt-12 border-t border-white/[0.06] pt-8">
+          <h3 className="font-display text-xl mb-4">Preferências</h3>
+          <button
+            type="button"
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            aria-pressed={soundEnabled}
+            className="flex items-center justify-between w-full rounded-xl border border-white/[0.06] bg-graphite-800/40 px-4 py-3 hover:bg-graphite-700/40 transition-colors duration-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber"
           >
+            <span className="flex items-center gap-3">
+              {soundEnabled ? (
+                <Volume2 className="h-5 w-5 text-amber" aria-hidden="true" />
+              ) : (
+                <VolumeX className="h-5 w-5 text-graphite-300" aria-hidden="true" />
+              )}
+              <span>
+                <span className="block text-graphite-50">Sons sutis</span>
+                <span className="block text-xs text-graphite-300">
+                  Sinetes em transições e celebrações
+                </span>
+              </span>
+            </span>
+            <span
+              className={`inline-flex h-7 w-12 items-center rounded-full p-1 transition-colors ${
+                soundEnabled ? 'bg-vocax-gradient' : 'bg-white/10'
+              }`}
+              aria-hidden="true"
+            >
+              <span
+                className={`inline-block h-5 w-5 rounded-full bg-white shadow-card transition-transform ${
+                  soundEnabled ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </span>
+          </button>
+        </div>
+
+        <div className="mt-8 flex flex-col sm:flex-row gap-3">
+          <Button variant="ghost" onClick={() => router.push('/onboarding')}>
             <RotateCcw className="h-4 w-4" />
             Refazer análise
           </Button>

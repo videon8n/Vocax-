@@ -99,8 +99,15 @@ export default function MusicasPage() {
         {/* Lista de músicas */}
         <div className="mt-10 grid gap-3">
           {results.length === 0 ? (
-            <div className="rounded-2xl border border-white/[0.06] bg-graphite-800/40 p-8 text-center text-graphite-200">
-              Nenhuma música cabe nesse filtro. Tente liberar mais gêneros.
+            <div className="rounded-2xl border border-white/[0.06] bg-graphite-800/40 p-8 text-center">
+              <p className="font-display text-2xl">Nenhuma música cabe nesse filtro.</p>
+              <p className="mt-2 text-graphite-200">
+                Os gêneros selecionados não têm faixas dentro da sua extensão.
+                Tente liberar mais opções.
+              </p>
+              <Button variant="ghost" onClick={() => setFilterGenres(new Set())} className="mt-5">
+                Limpar filtros
+              </Button>
             </div>
           ) : (
             results.map((m, i) => <SongRow key={m.song.id} match={m} rank={i + 1} />)

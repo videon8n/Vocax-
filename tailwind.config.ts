@@ -57,10 +57,17 @@ const config: Config = {
         '2xl': '28px',
         '3xl': '36px',
       },
+      // Motion tokens — durações/easing reutilizáveis
       transitionTimingFunction: {
         smooth: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        snap: 'cubic-bezier(0.32, 0, 0.32, 1)',
+        spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
       },
       transitionDuration: {
+        fast: '160ms',
+        base: '240ms',
+        slow: '360ms',
+        // legados (não remover por compatibilidade com classes existentes)
         240: '240ms',
         360: '360ms',
       },
@@ -70,10 +77,19 @@ const config: Config = {
         'vocax-radial':
           'radial-gradient(ellipse at top, rgba(245,166,91,0.18), transparent 60%), radial-gradient(ellipse at bottom, rgba(224,69,123,0.15), transparent 55%)',
       },
+      boxShadow: {
+        'glow-amber': '0 0 32px rgba(245, 166, 91, 0.35)',
+        'glow-magenta': '0 0 32px rgba(224, 69, 123, 0.35)',
+        card: '0 12px 32px -12px rgba(0, 0, 0, 0.6)',
+        'card-lg': '0 24px 48px -16px rgba(0, 0, 0, 0.7)',
+      },
       animation: {
         'pulse-soft': 'pulseSoft 2.4s ease-in-out infinite',
         'breath': 'breath 4s ease-in-out infinite',
         'shimmer': 'shimmer 2.4s linear infinite',
+        'fade-in': 'fadeIn 360ms cubic-bezier(0.22, 1, 0.36, 1) both',
+        'rise-in': 'riseIn 480ms cubic-bezier(0.22, 1, 0.36, 1) both',
+        'slide-up': 'slideUp 280ms cubic-bezier(0.22, 1, 0.36, 1) both',
       },
       keyframes: {
         pulseSoft: {
@@ -87,6 +103,18 @@ const config: Config = {
         shimmer: {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
+        },
+        fadeIn: {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        riseIn: {
+          from: { opacity: '0', transform: 'translateY(16px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        slideUp: {
+          from: { opacity: '0', transform: 'translateY(8px) scale(0.98)' },
+          to: { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
       },
     },

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Fraunces, Inter } from 'next/font/google';
+import { ToastViewport } from '@/ui/toast';
 import './globals.css';
 
 const fontDisplay = Fraunces({
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" className={`${fontDisplay.variable} ${fontSans.variable} dark`}>
       <body className="font-sans antialiased bg-mesh">
         {children}
+        <ToastViewport />
       </body>
     </html>
   );

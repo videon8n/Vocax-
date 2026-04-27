@@ -22,8 +22,10 @@ export async function attachPitchStream(
   mic: MicHandle,
   onSample: (sample: PitchSample) => void
 ): Promise<PitchStreamHandle> {
-  // Garante que o worklet seja carregado uma única vez por contexto
-  await mic.audioContext.audioWorklet.addModule('/worklets/pitch-processor.js');
+  // Garante que o worklet seja carregado uma única vez por contexto.
+  // Em GitHub Pages, basePath '/Vocax-' precisa entrar no caminho.
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+  await mic.audioContext.audioWorklet.addModule(`${basePath}/worklets/pitch-processor.js`);
 
   const node = new AudioWorkletNode(mic.audioContext, 'pitch-processor', {
     numberOfInputs: 1,

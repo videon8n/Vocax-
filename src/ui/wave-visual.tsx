@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/cn';
 
 interface WaveVisualProps {
@@ -20,13 +20,32 @@ interface WaveVisualProps {
 export function WaveVisual({ level, confidence = 1, className, active = true }: WaveVisualProps) {
   const ref = useRef<HTMLDivElement>(null);
   const targetRef = useRef(level);
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
     targetRef.current = level;
   }, [level]);
 
+  // prefers-reduced-motion: WCAG 2.3.3 — desliga animação respiratória
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReduceMotion(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
   useEffect(() => {
     if (!ref.current) return;
+    if (reduceMotion) {
+      // estado estático: escala fixa proporcional ao nível atual, sem RAF
+      const scale = 1 + Math.min(0.3, targetRef.current * 4);
+      const opacity = 0.6 + Math.min(0.3, targetRef.current * 4);
+      ref.current.style.setProperty('--scale', String(scale));
+      ref.current.style.setProperty('--opacity', String(opacity));
+      return;
+    }
     let raf = 0;
     let current = 0;
     const tick = () => {
@@ -41,13 +60,12 @@ export function WaveVisual({ level, confidence = 1, className, active = true }: 
     };
     if (active) raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [active]);
+  }, [active, reduceMotion]);
 
   return (
-    <div className={cn('relative flex items-center justify-center', className)}>
+    <div className={cn('relative flex items-center justify-center', className)} aria-hidden="true">
       <div
         ref={ref}
-        aria-hidden
         className="relative h-48 w-48 rounded-full bg-vocax-gradient blur-xl"
         style={{
           transform: 'scale(var(--scale, 1))',
@@ -57,10 +75,9 @@ export function WaveVisual({ level, confidence = 1, className, active = true }: 
         }}
       />
       <div
-        aria-hidden
         className={cn(
           'absolute h-32 w-32 rounded-full bg-vocax-gradient',
-          active && 'animate-breath'
+          active && !reduceMotion && 'animate-breath'
         )}
       />
       <div className="absolute h-20 w-20 rounded-full bg-graphite-900 ring-1 ring-white/10 backdrop-blur-md" />

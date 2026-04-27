@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   description:
     'Análise vocal com IA. Em 90 segundos, descubra seu timbre, sua extensão e as músicas que caem na sua voz.',
   applicationName: 'Vocax',
-  manifest: '/manifest.webmanifest',
+  // manifest gerado automaticamente por src/app/manifest.ts (Next.js convention)
   appleWebApp: {
     capable: true,
     title: 'Vocax',
@@ -43,7 +43,7 @@ export const viewport: Viewport = {
   themeColor: '#0E0E12',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
+  // WCAG 2.5.4: usuário pode aplicar zoom até 5x sem quebra de layout
   viewportFit: 'cover',
 };
 

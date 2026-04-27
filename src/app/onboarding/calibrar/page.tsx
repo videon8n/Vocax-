@@ -6,7 +6,9 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/ui/header';
 import { Button } from '@/ui/button';
 import { WaveVisual } from '@/ui/wave-visual';
+import { UnsupportedBrowser } from '@/ui/unsupported-browser';
 import { usePitchStream } from '@/features/pitch/use-pitch-stream';
+import { detectAudioCapabilities, getBlockingIssue, type CompatibilityIssue } from '@/audio/capabilities';
 import { Mic, MicOff, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 
 export default function CalibrarPage() {
@@ -14,6 +16,13 @@ export default function CalibrarPage() {
   const { status, start, stop, latest, rmsLevel, error } = usePitchStream();
   const [stage, setStage] = useState<'pre' | 'listening' | 'good' | 'too-quiet' | 'too-loud'>('pre');
   const [tick, setTick] = useState(0);
+  const [compatIssue, setCompatIssue] = useState<CompatibilityIssue | null | undefined>(undefined);
+
+  // Checa capacidades antes de qualquer interação com mic
+  useEffect(() => {
+    const caps = detectAudioCapabilities();
+    setCompatIssue(getBlockingIssue(caps));
+  }, []);
 
   useEffect(() => {
     if (status !== 'listening') return;
@@ -44,6 +53,24 @@ export default function CalibrarPage() {
   function handleProceed() {
     stop();
     router.push('/onboarding/exercicio');
+  }
+
+  // Aguarda detecção; mostra fallback educativo se navegador não suporta
+  if (compatIssue === undefined) {
+    return (
+      <>
+        <Header />
+        <main className="mx-auto max-w-2xl px-6 py-16" aria-busy="true" />
+      </>
+    );
+  }
+  if (compatIssue) {
+    return (
+      <>
+        <Header />
+        <UnsupportedBrowser issue={compatIssue} />
+      </>
+    );
   }
 
   return (

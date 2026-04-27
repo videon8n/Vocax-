@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/ui/header';
 import { Button } from '@/ui/button';
+import { Dialog } from '@/ui/dialog';
 import { useSession } from '@/state/session-store';
 import { midiToNoteName } from '@/lib/music';
 import { Music, RotateCcw, ArrowRight, Trash2 } from 'lucide-react';
@@ -12,6 +14,7 @@ export default function PerfilPage() {
   const profile = useSession((s) => s.profile);
   const clear = useSession((s) => s.clear);
   const router = useRouter();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   if (!profile) {
     return (
@@ -87,19 +90,36 @@ export default function PerfilPage() {
             <RotateCcw className="h-4 w-4" />
             Refazer análise
           </Button>
-          <Button
-            variant="danger"
-            onClick={() => {
-              if (confirm('Tem certeza? Seu perfil vocal será apagado deste navegador.')) {
-                clear();
-                router.push('/');
-              }
-            }}
-          >
+          <Button variant="danger" onClick={() => setConfirmOpen(true)}>
             <Trash2 className="h-4 w-4" />
             Esquecer-me
           </Button>
         </div>
+
+        <Dialog
+          open={confirmOpen}
+          onClose={() => setConfirmOpen(false)}
+          title="Apagar o seu perfil vocal?"
+          description="Seu cartão de voz, extensão, fach e timbre serão removidos deste navegador. Não há como desfazer."
+          destructive
+        >
+          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+            <Button variant="ghost" onClick={() => setConfirmOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                setConfirmOpen(false);
+                clear();
+                router.push('/');
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+              Apagar perfil
+            </Button>
+          </div>
+        </Dialog>
       </main>
     </>
   );

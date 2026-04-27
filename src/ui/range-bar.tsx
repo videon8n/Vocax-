@@ -40,9 +40,15 @@ export function RangeBar({
     octaveTicks.push(m);
   }
 
+  const lowName = midiToNoteName(lowMidi);
+  const highName = midiToNoteName(highMidi);
+  const tessLowName = midiToNoteName(tessituraLowMidi);
+  const tessHighName = midiToNoteName(tessituraHighMidi);
+  const ariaLabel = `Sua extensão vocal vai de ${lowName} a ${highName}. Tessitura confortável entre ${tessLowName} e ${tessHighName}.`;
+
   return (
-    <div className={cn('w-full', className)}>
-      <div className="relative h-12 rounded-xl bg-graphite-800/60 border border-white/[0.05] overflow-hidden">
+    <div className={cn('w-full', className)} role="img" aria-label={ariaLabel}>
+      <div className="relative h-12 rounded-xl bg-graphite-800/60 border border-white/[0.05] overflow-hidden" aria-hidden="true">
         {/* Tickmarks de oitava */}
         {octaveTicks.map((m) => (
           <div
@@ -72,10 +78,10 @@ export function RangeBar({
           style={{ left: `${right}%` }}
         />
       </div>
-      <div className="mt-2 flex justify-between text-xs text-graphite-300 font-mono">
+      <div className="mt-2 flex justify-between text-xs text-graphite-300 font-mono" aria-hidden="true">
         <span>{midiToNoteName(pianoLow)}</span>
         <span className="text-amber">
-          {midiToNoteName(lowMidi)} ↔ {midiToNoteName(highMidi)}
+          {lowName} ↔ {highName}
         </span>
         <span>{midiToNoteName(pianoHigh)}</span>
       </div>

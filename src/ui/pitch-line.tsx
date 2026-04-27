@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { freqToMidi, midiToNoteName } from '@/lib/music';
 import { cn } from '@/lib/cn';
 
@@ -113,9 +113,22 @@ export function PitchLine({ hzHistory, className, targetMidi }: PitchLineProps) 
     }
   }, [hzHistory, targetMidi]);
 
+  const ariaLabel = useMemo(() => {
+    const last = hzHistory[hzHistory.length - 1];
+    if (!last?.hz || last.confidence < 0.4) {
+      return 'Visualização de pitch em tempo real. Aguardando voz.';
+    }
+    const note = midiToNoteName(freqToMidi(last.hz));
+    return `Visualização de pitch em tempo real. Nota detectada: ${note}, ${last.hz.toFixed(0)} Hertz, confiança ${Math.round(last.confidence * 100)}%.`;
+  }, [hzHistory]);
+
   return (
-    <div className={cn('relative w-full overflow-hidden rounded-2xl border border-white/[0.06] bg-graphite-800/40', className)}>
-      <canvas ref={canvasRef} className="block w-full h-full" style={{ height: '220px' }} />
+    <div
+      className={cn('relative w-full overflow-hidden rounded-2xl border border-white/[0.06] bg-graphite-800/40', className)}
+      role="img"
+      aria-label={ariaLabel}
+    >
+      <canvas ref={canvasRef} className="block w-full h-full" style={{ height: '220px' }} aria-hidden="true" />
     </div>
   );
 }

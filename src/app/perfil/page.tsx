@@ -8,8 +8,10 @@ import { Button } from '@/ui/button';
 import { Dialog } from '@/ui/dialog';
 import { useSession } from '@/state/session-store';
 import { usePreferences } from '@/state/preferences-store';
+import { SyncCard } from '@/ui/sync-card';
+import { isSupabaseConfigured } from '@/lib/supabase/config';
 import { midiToNoteName } from '@/lib/music';
-import { Music, RotateCcw, ArrowRight, Trash2, Volume2, VolumeX } from 'lucide-react';
+import { Music, RotateCcw, ArrowRight, Trash2, Volume2, VolumeX, Clock } from 'lucide-react';
 
 export default function PerfilPage() {
   const profile = useSession((s) => s.profile);
@@ -84,6 +86,22 @@ export default function PerfilPage() {
             Ver minhas músicas
           </Link>
         </div>
+
+        <div className="mt-10">
+          <SyncCard />
+        </div>
+
+        {isSupabaseConfigured && (
+          <div className="mt-4">
+            <Link
+              href="/perfil/historico"
+              className="inline-flex items-center gap-2 text-sm text-graphite-200 hover:text-graphite-50"
+            >
+              <Clock className="h-4 w-4" aria-hidden="true" />
+              Ver histórico completo
+            </Link>
+          </div>
+        )}
 
         <div className="mt-12 border-t border-white/[0.06] pt-8">
           <h3 className="font-display text-xl mb-4">Preferências</h3>

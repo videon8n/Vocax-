@@ -13,6 +13,7 @@ import { usePreferences } from '@/state/preferences-store';
 import { playReveal } from '@/lib/sound';
 import { track } from '@/lib/analytics';
 import { midiToNoteName } from '@/lib/music';
+import { InfoTooltip } from '@/ui/info-tooltip';
 import { RotateCcw, ArrowRight, Users } from 'lucide-react';
 
 export default function ResultadoPage() {
@@ -140,7 +141,12 @@ export default function ResultadoPage() {
                   <Metric label="Total" value={`${range.spanSemitones} semitons`} />
                 </div>
                 <p className="mt-4 text-sm text-graphite-200">
-                  Sua zona confortável (tessitura) está entre{' '}
+                  Sua zona confortável (
+                  <InfoTooltip term="tessitura">
+                    A faixa onde a voz soa mais natural — não os extremos da extensão.
+                    Tecnicamente: percentis 25 a 75 das notas que você produziu.
+                  </InfoTooltip>
+                  ) está entre{' '}
                   <strong className="text-graphite-50">
                     {midiToNoteName(range.tessituraLowMidi)} e {midiToNoteName(range.tessituraHighMidi)}
                   </strong>
@@ -173,9 +179,17 @@ export default function ResultadoPage() {
                 </div>
                 {timbre.vibratoRateHz && (
                   <p className="mt-5 text-sm text-graphite-200">
-                    Detectamos <strong className="text-graphite-50">vibrato natural</strong> de{' '}
-                    {timbre.vibratoRateHz.toFixed(1)} Hz com {timbre.vibratoExtentCents} cents de extensão.
-                    Sinal de domínio respiratório.
+                    Detectamos{' '}
+                    <InfoTooltip term="vibrato natural">
+                      Oscilação periódica de altura entre 4 e 7 Hz, sinal de coordenação
+                      respiratória madura. Não é tremolo (variação de volume).
+                    </InfoTooltip>
+                    {' '}de {timbre.vibratoRateHz.toFixed(1)} Hz com {timbre.vibratoExtentCents}{' '}
+                    <InfoTooltip term="cents">
+                      Centésimo de semitom. 100 cents = 1 semitom. Útil para descrever
+                      pequenas variações que o ouvido percebe mas que não chegam a ser nota nova.
+                    </InfoTooltip>
+                    {' '}de extensão. Sinal de domínio respiratório.
                   </p>
                 )}
               </Section>

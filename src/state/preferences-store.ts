@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware';
 
 interface PreferencesState {
   /** Som ambiente em transições/celebrações. Default: false. */
@@ -12,6 +12,31 @@ interface PreferencesState {
   setSoundEnabled: (v: boolean) => void;
   setAnalyticsConsent: (v: boolean) => void;
   setHasHydrated: (v: boolean) => void;
+}
+
+function pickClientStorage(): StateStorage {
+  const memory = new Map<string, string>();
+  const inMemory: StateStorage = {
+    getItem: (k) => memory.get(k) ?? null,
+    setItem: (k, v) => {
+      memory.set(k, v);
+    },
+    removeItem: (k) => {
+      memory.delete(k);
+    },
+  };
+  if (typeof window === 'undefined') return inMemory;
+  for (const candidate of [window.localStorage, window.sessionStorage]) {
+    try {
+      const probe = '__vocax_probe__';
+      candidate.setItem(probe, '1');
+      candidate.removeItem(probe);
+      return candidate;
+    } catch {
+      continue;
+    }
+  }
+  return inMemory;
 }
 
 export const usePreferences = create<PreferencesState>()(
@@ -26,9 +51,7 @@ export const usePreferences = create<PreferencesState>()(
     }),
     {
       name: 'vocax-preferences-v1',
-      storage: createJSONStorage(() =>
-        typeof window !== 'undefined' ? localStorage : (undefined as unknown as Storage)
-      ),
+      storage: createJSONStorage(pickClientStorage),
       partialize: (state) => ({
         soundEnabled: state.soundEnabled,
         analyticsConsent: state.analyticsConsent,

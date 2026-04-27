@@ -8,27 +8,24 @@ import { Header } from '@/ui/header';
 import { VoiceCard } from '@/ui/voice-card';
 import { RangeBar } from '@/ui/range-bar';
 import { ShareActions } from '@/ui/share-actions';
-import { useSession } from '@/state/session-store';
+import { useSession, useRequireProfile } from '@/state/session-store';
 import { usePreferences } from '@/state/preferences-store';
 import { playReveal } from '@/lib/sound';
 import { track } from '@/lib/analytics';
 import { midiToNoteName } from '@/lib/music';
+import { formatSemitones, formatSamples, formatSeconds } from '@/lib/format';
 import { InfoTooltip } from '@/ui/info-tooltip';
-import { RotateCcw, ArrowRight, Users } from 'lucide-react';
+import { RotateCcw, ArrowRight, Users, Download } from 'lucide-react';
 
 export default function ResultadoPage() {
-  const profile = useSession((s) => s.profile);
-  const hasHydrated = useSession((s) => s.hasHydrated);
+  const { profile } = useRequireProfile();
   const clear = useSession((s) => s.clear);
   const soundEnabled = usePreferences((s) => s.soundEnabled);
   const router = useRouter();
   const cardRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
   const [revealed, setRevealed] = useState(false);
-
-  useEffect(() => {
-    if (hasHydrated && !profile) router.replace('/onboarding');
-  }, [profile, hasHydrated, router]);
+  const [downloading, setDownloading] = useState(false);
 
   // Reveal "wow" — confetti + som — uma única vez por mount
   useEffect(() => {
@@ -69,6 +66,28 @@ export default function ResultadoPage() {
     const adj = profile.timbre.adjectives.slice(0, 2).join(' e ');
     return `Acabei de descobrir no Vocax: minha voz é ${profile.fach.primaryLabel}, ${adj}, com extensão de ${midiToNoteName(profile.range.lowMidi)} a ${midiToNoteName(profile.range.highMidi)}.`;
   }, [profile]);
+
+  async function handleDownloadPng() {
+    if (!cardRef.current) return;
+    setDownloading(true);
+    try {
+      const { toPng } = await import('html-to-image');
+      const dataUrl = await toPng(cardRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+        backgroundColor: '#0E0E12',
+      });
+      const link = document.createElement('a');
+      link.download = `vocax-cartao-de-voz-${new Date().toISOString().slice(0, 10)}.png`;
+      link.href = dataUrl;
+      link.click();
+      track('card_shared', { channel: 'download_png' });
+    } catch (err) {
+      console.error('[downloadPng]', err);
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   if (!profile) return null;
 
@@ -117,6 +136,15 @@ export default function ResultadoPage() {
                 <Users className="h-4 w-4" aria-hidden="true" />
                 Comparar com amigo
               </Link>
+              <button
+                type="button"
+                onClick={handleDownloadPng}
+                disabled={downloading}
+                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-base text-graphite-100 backdrop-blur-md transition-all duration-base ease-smooth hover:bg-white/10 hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber min-h-[48px] disabled:opacity-50"
+              >
+                <Download className="h-4 w-4" aria-hidden="true" />
+                {downloading ? 'Gerando…' : 'Baixar PNG'}
+              </button>
             </div>
           </motion.div>
 
@@ -138,7 +166,7 @@ export default function ResultadoPage() {
                 <div className="mt-5 grid grid-cols-3 gap-3">
                   <Metric label="Mais grave" value={midiToNoteName(range.lowMidi)} />
                   <Metric label="Mais aguda" value={midiToNoteName(range.highMidi)} />
-                  <Metric label="Total" value={`${range.spanSemitones} semitons`} />
+                  <Metric label="Total" value={formatSemitones(range.spanSemitones)} />
                 </div>
                 <p className="mt-4 text-sm text-graphite-200">
                   Sua zona confortável (
@@ -158,7 +186,7 @@ export default function ResultadoPage() {
             <motion.div
               initial={stagger.initial}
               animate={stagger.animate}
-              transition={{ ...stagger.transition, delay: reducedMotion ? 0 : 0.3 }}
+              transition={{ ...stagger.transition, delay: reducedMotion ? 0 : 0.15 }}
             >
               <Section title="Seu timbre" subtitle="Como sua voz é descrita por quem te escuta.">
                 <div className="flex flex-wrap gap-2 mt-3">
@@ -198,16 +226,13 @@ export default function ResultadoPage() {
             <motion.div
               initial={stagger.initial}
               animate={stagger.animate}
-              transition={{ ...stagger.transition, delay: reducedMotion ? 0 : 0.4 }}
+              transition={{ ...stagger.transition, delay: reducedMotion ? 0 : 0.2 }}
             >
               <Section title="Seu fach" subtitle="A classificação que professores de canto usam.">
                 <div className="mt-3 rounded-2xl border border-white/[0.06] bg-graphite-800/40 p-5">
-                  <p
-                    className="text-base text-graphite-100 leading-relaxed"
-                    dangerouslySetInnerHTML={{
-                      __html: fach.humanPhrase.replace(/\*\*(.+?)\*\*/g, '<strong class="text-graphite-50">$1</strong>'),
-                    }}
-                  />
+                  <p className="text-base text-graphite-100 leading-relaxed">
+                    {renderBoldMarkdown(fach.humanPhrase)}
+                  </p>
                   <div className="mt-4 flex items-center gap-3 text-sm text-graphite-300">
                     <span>Confiança</span>
                     <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
@@ -225,7 +250,7 @@ export default function ResultadoPage() {
             <motion.div
               initial={stagger.initial}
               animate={stagger.animate}
-              transition={{ ...stagger.transition, delay: reducedMotion ? 0 : 0.5 }}
+              transition={{ ...stagger.transition, delay: reducedMotion ? 0 : 0.25 }}
               className="rounded-2xl border border-amber/20 bg-amber/5 p-6 flex flex-col sm:flex-row items-start gap-4"
             >
               <div className="flex-1">
@@ -246,7 +271,7 @@ export default function ResultadoPage() {
                 {new Date(profile.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
               </span>
               <span>·</span>
-              <span>{stats.sampleCount} amostras · {stats.durationSec.toFixed(0)}s</span>
+              <span>{formatSamples(stats.sampleCount)} · {formatSeconds(stats.durationSec)}</span>
               <span>·</span>
               <button
                 onClick={() => {
@@ -299,5 +324,22 @@ function Bar({ label, value }: { label: string; value: number }) {
         <div className="h-full bg-vocax-gradient" style={{ width: `${pct}%` }} />
       </div>
     </div>
+  );
+}
+
+/**
+ * Substitui regex + dangerouslySetInnerHTML por split + JSX. Suporta apenas
+ * o subset que `classifyFach` produz: pares de `**texto**` para destaque.
+ */
+function renderBoldMarkdown(text: string): React.ReactNode {
+  const parts = text.split(/\*\*(.+?)\*\*/);
+  return parts.map((segment, i) =>
+    i % 2 === 1 ? (
+      <strong key={i} className="text-graphite-50">
+        {segment}
+      </strong>
+    ) : (
+      <span key={i}>{segment}</span>
+    )
   );
 }

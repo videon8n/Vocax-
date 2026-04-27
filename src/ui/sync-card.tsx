@@ -42,17 +42,27 @@ export function SyncCard() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   async function handleSendMagicLink(e: React.FormEvent) {
     e.preventDefault();
+    setEmailError(null);
+    const trimmed = email.trim();
+    if (!emailRegex.test(trimmed)) {
+      setEmailError('Digite um email válido (ex: nome@dominio.com).');
+      return;
+    }
     const sb = getSupabaseBrowser();
-    if (!sb || !email) return;
+    if (!sb) return;
     setLoading(true);
     const { error } = await sb.auth.signInWithOtp({
-      email,
+      email: trimmed,
       options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=/perfil` },
     });
     setLoading(false);
     if (error) {
+      setEmailError(error.message);
       toast({ tone: 'error', title: 'Não foi possível enviar', description: error.message });
       return;
     }
@@ -155,24 +165,40 @@ export function SyncCard() {
           Link mágico enviado para <strong>{email}</strong>. Abra no mesmo navegador.
         </div>
       ) : (
-        <form onSubmit={handleSendMagicLink} className="flex flex-col sm:flex-row gap-3">
-          <label htmlFor="magic-email" className="sr-only">
-            Email
-          </label>
-          <input
-            id="magic-email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="seu@email.com"
-            className="flex-1 rounded-xl border border-white/10 bg-graphite-900/60 px-4 py-3 text-base text-graphite-50 placeholder:text-graphite-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber min-h-[48px]"
-          />
-          <Button type="submit" loading={loading}>
-            <Mail className="h-4 w-4" />
-            Enviar link
-          </Button>
+        <form onSubmit={handleSendMagicLink} noValidate className="flex flex-col gap-2">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <label htmlFor="magic-email" className="sr-only">
+                Email para receber link mágico
+              </label>
+              <input
+                id="magic-email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (emailError) setEmailError(null);
+                }}
+                aria-invalid={emailError ? 'true' : 'false'}
+                aria-describedby={emailError ? 'magic-email-error' : undefined}
+                placeholder="seu@email.com"
+                className={`w-full rounded-xl border bg-graphite-900/60 px-4 py-3 text-base text-graphite-50 placeholder:text-graphite-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber min-h-[48px] ${
+                  emailError ? 'border-danger/60' : 'border-white/10'
+                }`}
+              />
+            </div>
+            <Button type="submit" loading={loading}>
+              <Mail className="h-4 w-4" />
+              Enviar link
+            </Button>
+          </div>
+          {emailError && (
+            <p id="magic-email-error" role="alert" className="text-sm text-danger">
+              {emailError}
+            </p>
+          )}
         </form>
       )}
     </div>

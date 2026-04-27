@@ -1,21 +1,42 @@
 import { ImageResponse } from 'next/og';
-import type { NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
+import { getClientIp, rateLimit } from '@/lib/rate-limit';
 
 export const runtime = 'edge';
 
 const SIZE = { width: 1200, height: 630 };
+
+const MAX_LEN = 32; // limite por param para evitar payloads grandes
+const SAFE_TEXT = /^[\p{L}\p{N}\s,\-—.()/]+$/u;
+
+function clean(raw: string | null, fallback = ''): string {
+  if (!raw) return fallback;
+  const trimmed = raw.trim().slice(0, MAX_LEN);
+  return SAFE_TEXT.test(trimmed) ? trimmed : fallback;
+}
 
 /**
  * Imagem OG dinâmica: voice-card simplificado para Twitter/Facebook/WhatsApp.
  * Query params: ?fach=Tenor&adjectives=quente,brilhante&range=C3-G4
  *
  * Cache: 1 ano (immutable) — cada combinação tem URL única, sem invalidação.
+ * Rate limit: 30 imagens/min por IP (cache do CDN cobre tráfego legítimo).
  */
 export async function GET(req: NextRequest) {
+  const ip = getClientIp(req);
+  const rl = rateLimit(`og:${ip}`, 30, 60_000);
+  if (!rl.ok) {
+    return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+  }
+
   const { searchParams } = new URL(req.url);
-  const fach = searchParams.get('fach') ?? 'A sua voz';
-  const adjectives = (searchParams.get('adjectives') ?? '').split(',').filter(Boolean).slice(0, 3);
-  const range = searchParams.get('range') ?? '';
+  const fach = clean(searchParams.get('fach'), 'A sua voz');
+  const adjectives = (searchParams.get('adjectives') ?? '')
+    .split(',')
+    .map((a) => clean(a, ''))
+    .filter(Boolean)
+    .slice(0, 3);
+  const range = clean(searchParams.get('range'), '');
 
   return new ImageResponse(
     (

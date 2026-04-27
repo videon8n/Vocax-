@@ -1,14 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Header } from '@/ui/header';
 import { Button } from '@/ui/button';
-import { useSession } from '@/state/session-store';
+import { useRequireProfile } from '@/state/session-store';
 import { matchSongs, type MatchResult } from '@/features/songs/matcher';
 import type { Genre } from '@/data/catalog';
-import { ArrowUpRight, Music, ArrowLeft, Filter } from 'lucide-react';
+import { ArrowUpRight, ArrowLeft, Filter } from 'lucide-react';
 
 const GENRES: Array<{ id: Genre; label: string }> = [
   { id: 'sertanejo', label: 'Sertanejo' },
@@ -22,14 +21,8 @@ const GENRES: Array<{ id: Genre; label: string }> = [
 ];
 
 export default function MusicasPage() {
-  const profile = useSession((s) => s.profile);
-  const hasHydrated = useSession((s) => s.hasHydrated);
-  const router = useRouter();
+  const { profile } = useRequireProfile();
   const [filterGenres, setFilterGenres] = useState<Set<Genre>>(new Set());
-
-  useEffect(() => {
-    if (hasHydrated && !profile) router.replace('/onboarding');
-  }, [profile, hasHydrated, router]);
 
   const results = useMemo<MatchResult[]>(() => {
     if (!profile) return [];

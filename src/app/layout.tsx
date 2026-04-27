@@ -3,6 +3,7 @@ import { Fraunces, Inter } from 'next/font/google';
 import Script from 'next/script';
 import { ToastViewport } from '@/ui/toast';
 import { ConsentBanner } from '@/ui/consent-banner';
+import { WebVitalsReporter } from '@/ui/web-vitals-reporter';
 import './globals.css';
 
 const fontDisplay = Fraunces({
@@ -101,10 +102,25 @@ const jsonLd = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${fontDisplay.variable} ${fontSans.variable} dark`}>
+      <head>
+        {/* Preload do AudioWorklet — economiza ~200ms até first-tap-mic */}
+        <link
+          rel="preload"
+          href="/worklets/pitch-processor.js"
+          as="script"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="font-sans antialiased bg-mesh">
-        {children}
+        <a href="#main-content" className="skip-link">
+          Pular para o conteúdo
+        </a>
+        <div id="main-content" tabIndex={-1} className="outline-none">
+          {children}
+        </div>
         <ToastViewport />
         <ConsentBanner />
+        <WebVitalsReporter />
         <Script
           id="schema-org"
           type="application/ld+json"

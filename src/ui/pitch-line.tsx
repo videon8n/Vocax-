@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { freqToMidi, midiToNoteName } from '@/lib/music';
 import { cn } from '@/lib/cn';
 
@@ -14,9 +14,21 @@ interface PitchLineProps {
 /**
  * Visualização SCROLL da linha de pitch. Cada coluna = 1 frame.
  * Mostra ~3.5 oitavas centradas na mediana recente.
+ *
+ * Re-renderiza em qualquer mudança de tamanho do container (resize,
+ * orientação, splitscreen) via ResizeObserver.
  */
 export function PitchLine({ hzHistory, className, targetMidi }: PitchLineProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [, setSizeTick] = useState(0);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => setSizeTick((n) => n + 1));
+    ro.observe(canvas);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -28,7 +40,7 @@ export function PitchLine({ hzHistory, className, targetMidi }: PitchLineProps) 
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const W = rect.width;
     const H = rect.height;

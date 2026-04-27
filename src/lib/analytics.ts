@@ -27,7 +27,8 @@ type EventName =
   | 'compare_completed_analysis'
   | 'song_clicked'
   | 'profile_cleared'
-  | 'unsupported_browser_shown';
+  | 'unsupported_browser_shown'
+  | 'web_vital';
 
 type EventProps = Record<string, string | number | boolean | null | undefined>;
 

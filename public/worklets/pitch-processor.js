@@ -20,7 +20,9 @@ const BUFFER_SIZE = 2048;          // janela de análise YIN
 const MIN_F0_HZ = 60;              // ~B1, mais grave que baixo
 const MAX_F0_HZ = 1200;            // ~D6, acima do alcance soprano
 const YIN_THRESHOLD = 0.15;        // limiar clássico do YIN
-const RMS_GATE = 0.005;            // abaixo disso = silêncio
+const RMS_GATE_FLOOR = 0.003;      // floor absoluto — abaixo disso é ruído de mic
+const RMS_GATE_FACTOR = 0.12;      // gate adaptativo = pico observado * fator
+const CALIBRATION_FRAMES = 30;     // ~1.4s a 44.1k para aprender o ambiente
 
 class PitchProcessor extends AudioWorkletProcessor {
   constructor(options) {
@@ -31,6 +33,12 @@ class PitchProcessor extends AudioWorkletProcessor {
     this.yinBuffer = new Float32Array(BUFFER_SIZE / 2);
     this.tauMin = Math.max(2, Math.floor(this.sampleRate / MAX_F0_HZ));
     this.tauMax = Math.min(this.yinBuffer.length - 1, Math.floor(this.sampleRate / MIN_F0_HZ));
+    // VAD adaptativo: aprende o pico de RMS nos primeiros frames e
+    // dimensiona o gate. Ambientes barulhentos sobem o gate; silenciosos baixam.
+    this.peakRms = 0;
+    this.framesProcessed = 0;
+    // Hysteresis para evitar piscamento entre voz/silêncio em fronteira
+    this.lastVoiced = false;
   }
 
   /**
@@ -112,6 +120,12 @@ class PitchProcessor extends AudioWorkletProcessor {
     return (crossings / buffer.length) * this.sampleRate / 2;
   }
 
+  /** Gate adaptativo: durante calibração usa floor; depois usa fator do pico. */
+  computeGate() {
+    if (this.framesProcessed < CALIBRATION_FRAMES) return RMS_GATE_FLOOR;
+    return Math.max(RMS_GATE_FLOOR, this.peakRms * RMS_GATE_FACTOR);
+  }
+
   process(inputs) {
     const input = inputs[0];
     if (!input || !input[0]) return true;
@@ -121,9 +135,18 @@ class PitchProcessor extends AudioWorkletProcessor {
       this.buffer[this.bufferIdx++] = channel[i];
       if (this.bufferIdx >= BUFFER_SIZE) {
         const rms = this.rms(this.buffer);
+        if (rms > this.peakRms) this.peakRms = rms;
+        this.framesProcessed += 1;
+
+        const gate = this.computeGate();
+        // Hysteresis: se já estávamos vozeados, aceitamos cair até 70% do gate
+        const hystGate = this.lastVoiced ? gate * 0.7 : gate;
         let result = { hz: null, confidence: 0 };
-        if (rms > RMS_GATE) {
+        if (rms > hystGate) {
           result = this.yin(this.buffer);
+          this.lastVoiced = result.hz !== null;
+        } else {
+          this.lastVoiced = false;
         }
         const centroid = this.spectralCentroidProxy(this.buffer);
         this.port.postMessage({

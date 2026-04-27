@@ -177,6 +177,10 @@ export default function ExercicioPage() {
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
+    // handlePause/Resume são closures estáveis (criadas no componente),
+    // mas seus efeitos dependem de running/paused/elapsed/soundEnabled
+    // que já estão em deps via os próprios useState
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running, paused]);
 
   const currentPhase = PHASES.find((p) => elapsed >= p.start && elapsed < p.end) ?? PHASES[PHASES.length - 1];

@@ -61,9 +61,9 @@ function ToastItem({ t }: { t: Toast }) {
   }, [t.id, t.duration, dismiss]);
 
   return (
+    // role apenas — aria-live mora no container ancestral, evitando dupla locução
     <div
-      role="status"
-      aria-live="polite"
+      role={t.tone === 'error' ? 'alert' : 'status'}
       className={cn(
         'pointer-events-auto flex items-start gap-3 rounded-2xl border bg-graphite-900/95 backdrop-blur-md p-4 pr-3 shadow-card-lg',
         'animate-slide-up min-w-[280px] max-w-[420px]'
@@ -94,6 +94,8 @@ export function ToastViewport() {
   const toasts = useToastStore((s) => s.toasts);
   return (
     <div
+      role="region"
+      aria-label="Notificações"
       aria-live="polite"
       aria-atomic="false"
       className="pointer-events-none fixed bottom-4 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 sm:max-w-[420px]"

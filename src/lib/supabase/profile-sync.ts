@@ -40,22 +40,21 @@ export async function listProfiles(): Promise<VoiceProfileRow[]> {
   return (data ?? []) as VoiceProfileRow[];
 }
 
-export async function deleteAllForUser(): Promise<{ ok: boolean; error?: string }> {
-  const sb = getSupabaseBrowser();
-  if (!sb) return { ok: false, error: 'supabase_not_configured' };
-  const {
-    data: { user },
-  } = await sb.auth.getUser();
-  if (!user) return { ok: false, error: 'not_authenticated' };
-  const { error: dbErr } = await sb.from(TABLE).delete().eq('user_id', user.id);
-  if (dbErr) return { ok: false, error: dbErr.message };
-  // Apaga conta inteira (cascade RLS)
-  const { error: authErr } = await sb.auth.admin.deleteUser(user.id);
-  if (authErr) {
-    // se admin client não estiver disponível, ao menos faz signOut
-    await sb.auth.signOut();
+export async function deleteAllForUser(): Promise<{ ok: boolean; error?: string; warn?: string }> {
+  // O endpoint /api/account roda no server e tem acesso ao service role
+  // (quando configurado). No client, fazer admin.deleteUser falha silenciosamente.
+  try {
+    const res = await fetch('/api/account', { method: 'DELETE' });
+    const data = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      error?: string;
+      warn?: string;
+    };
+    if (!res.ok) return { ok: false, error: data.error ?? `http_${res.status}` };
+    return { ok: true, warn: data.warn };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : 'network_error' };
   }
-  return { ok: true };
 }
 
 export function exportProfilesAsJson(rows: VoiceProfileRow[]): string {

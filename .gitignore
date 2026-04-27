@@ -11,3 +11,14 @@ next-env.d.ts
 coverage/
 .vscode/
 .idea/
+
+# Claude Code session metadata
+.claude/
+
+# Playwright
+playwright-report/
+test-results/
+.playwright/
+
+# Vercel
+.vercel/

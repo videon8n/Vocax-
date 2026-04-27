@@ -15,6 +15,7 @@ import { useSession } from '@/state/session-store';
 import { usePreferences } from '@/state/preferences-store';
 import { playChime } from '@/lib/sound';
 import { toast } from '@/ui/toast';
+import { track } from '@/lib/analytics';
 import { Play, Pause, ArrowRight, RotateCcw } from 'lucide-react';
 
 const TOTAL_SECONDS = 90;
@@ -63,7 +64,9 @@ export default function ExercicioPage() {
     if (status === 'listening' && !running && elapsed === 0) {
       setRunning(true);
       segmentStartRef.current = performance.now();
+      track('exercise_started');
     }
+    if (status === 'error') track('mic_denied');
   }, [status, running, elapsed]);
 
   // Cronômetro com suporte a pause
@@ -98,12 +101,14 @@ export default function ExercicioPage() {
       segmentStartRef.current = null;
     }
     setPaused(true);
+    track('exercise_paused', { elapsed: Math.round(elapsed) });
     toast({ tone: 'info', title: 'Exercício pausado', description: 'Você pode continuar quando quiser.' });
   }
 
   function handleResume() {
     segmentStartRef.current = performance.now();
     setPaused(false);
+    track('exercise_resumed');
   }
 
   function handleRestart() {
@@ -152,6 +157,11 @@ export default function ExercicioPage() {
         sampleCount: samples.length,
         pitchAccuracyHint: validRatio,
       },
+    });
+    track('exercise_completed', {
+      duration: Math.round(elapsed),
+      samples: samples.length,
+      fach: fach.primary,
     });
     router.push('/resultado');
   }

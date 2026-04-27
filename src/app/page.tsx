@@ -1,8 +1,15 @@
+'use client';
+
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { Header } from '@/ui/header';
-import { ArrowRight, Mic, Sparkles, Music, Shield } from 'lucide-react';
+import { ArrowRight, Mic, Sparkles, Music, Shield, Instagram, Youtube } from 'lucide-react';
+import { track } from '@/lib/analytics';
 
 export default function LandingPage() {
+  useEffect(() => {
+    track('landing_viewed');
+  }, []);
   return (
     <>
       <Header />
@@ -123,12 +130,34 @@ export default function LandingPage() {
             <div className="flex items-center gap-2">
               <span className="inline-block h-5 w-5 rounded bg-vocax-gradient" />
               <span className="font-display text-lg text-graphite-100">Vocax</span>
-              <span>© 2026</span>
+              <span>© {new Date().getFullYear()}</span>
             </div>
-            <div className="flex gap-6">
-              <Link href="/privacidade" className="hover:text-graphite-100">Privacidade</Link>
-              <Link href="/termos" className="hover:text-graphite-100">Termos</Link>
-              <Link href="/sobre" className="hover:text-graphite-100">Sobre</Link>
+            <div className="flex flex-wrap items-center gap-6">
+              <Link href="/blog" className="hover:text-graphite-100 transition-colors">Blog</Link>
+              <Link href="/sobre" className="hover:text-graphite-100 transition-colors">Sobre</Link>
+              <Link href="/privacidade" className="hover:text-graphite-100 transition-colors">Privacidade</Link>
+              <Link href="/termos" className="hover:text-graphite-100 transition-colors">Termos</Link>
+              <span className="hidden sm:inline text-graphite-500">·</span>
+              <div className="flex items-center gap-3">
+                <a
+                  href="https://instagram.com/vocax.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram do Vocax"
+                  className="hover:text-graphite-100 transition-colors"
+                >
+                  <Instagram className="h-4 w-4" aria-hidden="true" />
+                </a>
+                <a
+                  href="https://youtube.com/@vocaxapp"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="YouTube do Vocax"
+                  className="hover:text-graphite-100 transition-colors"
+                >
+                  <Youtube className="h-4 w-4" aria-hidden="true" />
+                </a>
+              </div>
             </div>
           </div>
         </footer>

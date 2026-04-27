@@ -11,6 +11,7 @@ import { ShareActions } from '@/ui/share-actions';
 import { useSession } from '@/state/session-store';
 import { usePreferences } from '@/state/preferences-store';
 import { playReveal } from '@/lib/sound';
+import { track } from '@/lib/analytics';
 import { midiToNoteName } from '@/lib/music';
 import { RotateCcw, ArrowRight, Users } from 'lucide-react';
 
@@ -32,6 +33,7 @@ export default function ResultadoPage() {
   useEffect(() => {
     if (!profile || revealed) return;
     setRevealed(true);
+    track('result_revealed', { fach: profile.fach.primary });
     if (reducedMotion) return;
     const t = setTimeout(async () => {
       try {

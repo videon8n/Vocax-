@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { Fraunces, Inter } from 'next/font/google';
+import Script from 'next/script';
 import { ToastViewport } from '@/ui/toast';
+import { ConsentBanner } from '@/ui/consent-banner';
 import './globals.css';
 
 const fontDisplay = Fraunces({
@@ -16,8 +18,10 @@ const fontSans = Inter({
   display: 'swap',
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://vocax.app';
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://vocax.app'),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'Vocax — Descubra a sua voz',
     template: '%s · Vocax',
@@ -25,7 +29,10 @@ export const metadata: Metadata = {
   description:
     'Análise vocal com IA. Em 90 segundos, descubra seu timbre, sua extensão e as músicas que caem na sua voz.',
   applicationName: 'Vocax',
-  // manifest gerado automaticamente por src/app/manifest.ts (Next.js convention)
+  alternates: {
+    canonical: '/',
+  },
+  // manifest gerado automaticamente por src/app/manifest.ts
   appleWebApp: {
     capable: true,
     title: 'Vocax',
@@ -37,6 +44,27 @@ export const metadata: Metadata = {
       'Análise vocal com IA. Descubra seu timbre, sua extensão e as músicas que caem na sua voz.',
     locale: 'pt_BR',
     type: 'website',
+    siteName: 'Vocax',
+    images: [
+      {
+        url: '/api/og?fach=A%20sua%20voz&adjectives=quente,brilhante,expressiva&range=C3%E2%80%94G5',
+        width: 1200,
+        height: 630,
+        alt: 'Vocax — Cartão de Voz',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Vocax — Descubra a sua voz',
+    description:
+      'Análise vocal com IA em 90 segundos. Descubra seu timbre, sua extensão e as músicas que caem na sua voz.',
+    images: ['/api/og?fach=A%20sua%20voz&adjectives=quente,brilhante,expressiva&range=C3%E2%80%94G5'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-video-preview': -1 },
   },
 };
 
@@ -44,8 +72,30 @@ export const viewport: Viewport = {
   themeColor: '#0E0E12',
   width: 'device-width',
   initialScale: 1,
-  // WCAG 2.5.4: usuário pode aplicar zoom até 5x sem quebra de layout
   viewportFit: 'cover',
+};
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'SoftwareApplication',
+      name: 'Vocax',
+      operatingSystem: 'Web',
+      applicationCategory: 'MusicApplication',
+      url: SITE_URL,
+      description:
+        'Análise vocal com IA. Identifica timbre, extensão vocal, fach e recomenda músicas que cabem na sua voz.',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'BRL' },
+      inLanguage: 'pt-BR',
+    },
+    {
+      '@type': 'Organization',
+      name: 'Vocax',
+      url: SITE_URL,
+      logo: `${SITE_URL}/icon0`,
+    },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -54,6 +104,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans antialiased bg-mesh">
         {children}
         <ToastViewport />
+        <ConsentBanner />
+        <Script
+          id="schema-org"
+          type="application/ld+json"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       </body>
     </html>
   );

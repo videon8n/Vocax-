@@ -19,8 +19,11 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
       // Conventions Next.js — geram via ImageResponse
       { src: '/icon', sizes: '32x32', type: 'image/png' },
-      { src: '/icon0', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-      { src: '/icon1', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+      // 192/512 listados duas vezes (any + maskable) — recomendação MDN
+      { src: '/icon0', sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: '/icon0', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+      { src: '/icon1', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: '/icon1', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
   };
 }

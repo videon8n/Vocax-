@@ -2,7 +2,6 @@ import { ImageResponse } from 'next/og';
 import type { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
-export const contentType = 'image/png';
 
 const SIZE = { width: 1200, height: 630 };
 
